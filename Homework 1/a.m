@@ -3,28 +3,37 @@ close all
 
 a1 = [-0.1950 -0.9750 -1.5955 -1.9114];
 a2 = ones(1,4)*0.95;
-
-R = []
-r = []
-eigvals = []
+R = [];
+eigvals = [];
 figure
-colors = ['r', 'b', 'g', 'c']
+colors = ['r', 'b', 'g', 'm'];
 
 % Calculates the four 2x2 correlation matrices and stores them in
 % a 2x8 matrix. Also computes the eigenvalues/eigenvectors and plots
 % the eigenvectors
+vectPlot = figure
+valPlot = figure
+
 for n = 1:4
     tmp_R = [1 (-a1(n)/(1+a2(n))*1) ; (-a1(n)/(1+a2(n))*1) 1]
-    tmp_r = [(-a1(n)/(1+a2(n))*1) ; -(a2(n) + (a1(n)^2)/(1+a2(n)))*1]
     [tmp_eigvecs tmp_eigvals] = eig(tmp_R)
     R = [R tmp_R]
-    r = [r tmp_r]
     eigvals = [eigvals [tmp_eigvals(1,1); tmp_eigvals(2,2)]]
-    plot(tmp_eigvecs, colors(n))
+    figure(vectPlot)
+    plot(tmp_eigvecs, colors(n));
+    hold on
+    figure(valPlot)
+    plot([tmp_eigvals(1,1); tmp_eigvals(2,2)])
     hold on
 end
 
-N = 100
+figure(vectPlot)
+title('Eigenvectors of all sets of coeffecients')
+
+figure(valPlot)
+title('Eigenvalues of all sets of coeffecients')
+
+N = 100;
 
 ww_sv1 = zeros(8, N); 
 ww_sv2 = zeros(8, N);
@@ -38,7 +47,7 @@ for k = 1:4
     m = 2*k -1;
     Rtmp = R(:, m:m+1);
     p = Rtmp * [a1(k); a2(k)];
-    mumax = max(eigvals(k))/2;
+    mumax = 2/max(eigvals(:,k));
     ww1=zeros(1,2)';
     ww2=zeros(1,2)';
     ww3=zeros(1,2)';
@@ -46,15 +55,15 @@ for k = 1:4
         % mu = 0.1*mumax
         ww_sv1(m:(m+1),nn)=ww1;
         mu = 0.1 * mumax;
-        ww1=ww1+mu*(p-R(1:2, 1:2)*ww1);
+        ww1=ww1+mu*(p-Rtmp(1:2, 1:2)*ww1);
         % mu = 0.5 * mumax
         ww_sv2(m:(m+1),nn)=ww2;
         mu = 0.5 * mumax;
-        ww2=ww2+mu*(p-R(1:2, 1:2)*ww2);
+        ww2=ww2+mu*(p-Rtmp(1:2, 1:2)*ww2);
         % mu = 0.99 * mumax
         ww_sv3(m:(m+1),nn)=ww3;
         mu = 0.99 * mumax;
-        ww3=ww3+mu*(p-R(1:2, 1:2)*ww3);
+        ww3=ww3+mu*(p-Rtmp(1:2, 1:2)*ww3);
     end
 end
 
@@ -66,7 +75,7 @@ for n = 1:4
     subplot(3,2,1)
     plot(0:N-1, ww_sv1(m:m+1, :))
     legend('a1', 'a2')
-    title('Time response mu = 0.1 * mumax')
+    title('Time response when mu = 0.1 * mumax')
     subplot(3,2,2)
     plot(ww_sv1(m,1:N), ww_sv1(m+1,1:N))
     title('Parametric plot when mu = 0.1 * mumax')
@@ -75,7 +84,7 @@ for n = 1:4
     subplot(3,2,3)
     plot(0:N-1, ww_sv2(m:m+1, :))
     legend('a1', 'a2')
-    title('Time response mu = 0.5 * mumax')
+    title('Time response when mu = 0.5 * mumax')
     subplot(3,2,4)
     plot(ww_sv2(m,1:N), ww_sv2(m+1,1:N))
     title('Parametric plot when mu = 0.5 * mumax')
@@ -84,7 +93,7 @@ for n = 1:4
     subplot(3,2,5)
     plot(0:N-1, ww_sv3(m:m+1, :))
     legend('a1', 'a2')
-    title('Time response mu = 0.99 * mumax')
+    title('Time response when mu = 0.99 * mumax')
     subplot(3,2,6)
     plot(ww_sv3(m,1:N), ww_sv3(m+1,1:N))
     title('Parametric plot when mu = 0.99 * mumax')
