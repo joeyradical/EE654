@@ -24,6 +24,8 @@ ww = kaiser(1000,10)';
 ww = ww/sum(ww);
 subplot(2,1,1)
 plot(linspace(-0.5,0.5,1000)*fs,fftshift(20*log10(abs(fft(x0+j*y0)).*ww)))
+xlim([-5000 5000])
+ylim([-100 0])
 title('Signal spectrum')
 xlabel('f[hz]')
 ylabel('logMagnitude[dB]')
@@ -35,6 +37,8 @@ plot(linspace(-0.5,0.5,1000)*fs,fftshift(20*log10(abs(fft(x1+j*y1)).*ww)))
 title('Signal spectrum with gain/phase imbalance and DC offset')
 xlabel('f[hz]')
 ylabel('logMagnitude[dB]')
+xlim([-5000 5000])
+ylim([-100 0])
 
 % Plot Lissajous pattern of signal
 figure

@@ -14,7 +14,5 @@ for nn = 1:N
     y(nn) = x1(nn)*w;
     w_new = (abs(x2(nn))-abs(y(nn)))*mu+w;
 end
-
-
 end
 

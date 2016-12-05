@@ -16,15 +16,15 @@ y01=y0+y1;
 % Plot time series of ADC samples
 figure
 subplot(3,1,1)
-stem(y0(1:50))
+stem(y0(1:100))
 title('Time series of even indexed samples')
 ylim([-1 1])
 subplot(3,1,2)
-stem(y1(1:50))
+stem(y1(1:100))
 title('Time series of odd indexed samples')
 ylim([-1 1])
 subplot(3,1,3)
-stem(linspace(1,50,100),y01(1:100))
+stem(y01(1:100))
 title('Time series of interleaved samples')
 ylim([-1 1])
 
@@ -65,11 +65,11 @@ y01g=y0g+y1g;
 % Plot time series of distorted ADC samples
 figure
 subplot(3,1,1)
-stem(y0g(1:50))
+stem(y0g(1:100))
 title('Time series of even indexed samples with DC offset and gain imbalance')
 ylim([-1.5 1.5])
 subplot(3,1,2)
-stem(y1g(1:50))
+stem(y1g(1:100))
 title('Time series of odd indexed samples with DC offset and gain imbalance')
 ylim([-1.5 1.5])
 subplot(3,1,3)
@@ -109,28 +109,24 @@ figure
 subplot(2,1,1)
 plot(0:999,dc_hat_0(1:1000))
 title('DC estimates for even samples')
-hold on
-plot([0 999],[-0.06 -0.06],'r')
 subplot(2,1,2)
 plot(0:999,dc_hat_1(1:1000))
-hold on
-plot([0 999],[0.05 0.05])
 title('DC estimates for odd samples')
 
 % Plot spectrum of DC cancelled signal
-ww2=kaiser(N,10)';
+ww2=kaiser(N*2-2000)';
 ww2=ww2/sum(ww2);
 figure
 subplot(3,1,1)
-plot(linspace(-0.5,0.5,N)*fs*2,fftshift(20*log10(abs(fft(y0c(10001:end)).*ww2))))
+plot(linspace(-0.5,0.5,N*2-2000)*fs*2,fftshift(20*log10(abs(fft(y0c(2001:end)).*ww2))))
 title('Spectrum of even indexed samples with DC cancelled')
 ylim([-100 0])
 subplot(3,1,2)
-plot(linspace(-0.5,0.5,N)*fs*2,fftshift(20*log10(abs(fft(y1c(10001:end)).*ww2))))
+plot(linspace(-0.5,0.5,N*2-2000)*fs*2,fftshift(20*log10(abs(fft(y1c(2001:end)).*ww2))))
 title('Spectrum of odd indexed samples with DC cancelled')
 ylim([-100 0])
 subplot(3,1,3)
-plot(linspace(-0.5,0.5,N)*fs*2,fftshift(20*log10(abs(fft(x0(10001:end)).*ww2))))
+plot(linspace(-0.5,0.5,N*2-2000)*fs*2,fftshift(20*log10(abs(fft(x0(2001:end)).*ww2))))
 title('Spectrum of interleaved samples with DC cancelled')
 ylim([-100 0])
 
@@ -156,42 +152,66 @@ cg_new=1;
 reg0=zeros(1,135);
 reg1=zeros(1,135);
 y4_sv=zeros(1,N*2);
+y3_sv=zeros(1,N*2);
+y2_sv=zeros(1,N*2);
+x2_sv=zeros(1,N*2);
 x3=zeros(1,N*2);
+cg=zeros(1,N*2);
 mu=0.01;
 
+% Run gain balancing algorithm
+
 for nn = 1:N*2
-    cg=cg_new;
+    cg(nn)=cg_new;
     x1=x0(nn)*cos(pi*nn);
-    x2=cg*x1;
+    x2=cg(nn)*x1;
+    x2_sv(nn)=x2;
     x3(nn)=x0(nn)-x2;
     reg0=[x0(nn) reg0(1:134)];
     reg1=[x1 reg1(1:134)];
     y1=reg1*h';
-    y2=y1*cg;
+    y2=y1*cg(nn);
+    y2_sv(nn)=y2;
     y3=reg0*h';
-    y4=y3-y2;
+    y3_sv(nn)=y3;
+    y4=abs(y3)-abs(y2);
     y4_sv(nn)=y4;
-    cg=y4*mu+cg;
+    cg_new=y4*mu+cg(nn);
 end
 
 % Plot spectrum of signal presented to the LMS canceller
 figure
 subplot(3,1,1)
-plot(linspace(-0.5,0.5,N)*fs*2,fftshift(20*log10(abs(fft(x0(10001:end)).*ww2))))
-title('Spectrum of signals presented to the LMS canceller')
-ylim([-100 0])
+plot(linspace(-0.5,0.5,N*2-2000)*fs,fftshift(20*log10(abs(fft(y2_sv(2001:end)).*ww2))))
+title('Spectrum of y2')
 subplot(3,1,2)
-plot(linspace(-0.5,0.5,N*2)*fs*2,fftshift(20*log10(abs(fft(y4_sv).*ww))))
-title('Spectrum of error signal')
+plot(linspace(-0.5,0.5,N*2-2000)*fs,fftshift(20*log10(abs(fft(y3_sv(2001:end)).*ww2))))
+title('Spectrum of y3')
 subplot(3,1,3)
-plot(0:999,y4_sv(1:1000))
-
-title('Canceller learning curve')
+plot(linspace(-0.5,0.5,N*2-2000)*fs,fftshift(20*log10(abs(fft(y4_sv(2001:end)).*ww2))))
+title('Spectrum of error signal')
 
 figure
-plot(linspace(-0.5,0.5,N*2)*fs*2,fftshift(20*log10(abs(fft(x3).*ww))))
+plot(0:1999,cg(1:2000))
+title('Canceller learning curve (cg over time)')
+
+% task e)
+
+figure
+subplot(3,1,1)
+plot(linspace(-0.5,0.5,N*2-2000)*fs,fftshift(20*log10(abs(fft(x0(2001:end)).*ww2))))
+ylim([-100 0])
+title('Spectrum of x0')
+subplot(3,1,2)
+plot(linspace(-0.5,0.5,N*2-2000)*fs,fftshift(20*log10(abs(fft(x2_sv(2001:end)).*ww2))))
+ylim([-100 0])
+title('Spectrum of x2')
+subplot(3,1,3)
+plot(linspace(-0.5,0.5,N*2-2000)*fs,fftshift(20*log10(abs(fft(x3(2001:end)).*ww2))))
 title('Spectrum of gain cancelled signal')
 ylim([-100 0])
+xlim([-1e6 1e6])
+
 
 
 
