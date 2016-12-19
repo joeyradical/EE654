@@ -50,26 +50,61 @@ reg=zeros(1,n_taps);
 wts=zeros(1,4);
 y2=zeros(1,N);
 y3=zeros(1,N);
-wts(1)=1;
+%wts(1)=1;
 mu=0.1;
-err_sv=zeros(1,N);
+y3_sv=zeros(1,N);
 % Run LMS algorithm
 for n=1:N
+    reg=[x(n) reg(1:3)];
     y2(n)=reg*wts';
-    y3(n)=y1(n)-y2(n);
     if n>n_taps
+        y3(n)=y1(n)-y2(n);
         wts=wts+mu*reg*conj(y3(n));
     end
-    reg=[x(n) reg(1:3)];
 end
 
 figure
 subplot(3,1,1)
 plot(0:N-1,20*log10(abs(y3)))
-title('Learning curve (logmag of error)')
+title('Learning curve of LMS algorithm (logmag of error)')
 subplot(3,1,2)
 plot(1001:1200,y3(1001:1200));
-title('200 samples of Error signal after transient')
+title('200 samples of error signal after transient')
+subplot(3,1,3);
+plot(linspace(-0.5,0.5,2000)*fs,fftshift(20*log10(abs(fft(y3(1501:3500)).*ww))))
+title('Spectrum of distorted signal')
+THD=100*var(y3)/var(y2);
+disp(['Total harmonic distortion: ' num2str(THD) '%'])
+
+% Task C
+reg=zeros(1,n_taps)';
+
+wts=zeros(1,n_taps)';
+wts(1)=1;
+
+delta=0.5;
+lambda=0.995;
+y3=zeros(1,1000);pp=(1/delta)*eye(n_taps);
+
+
+
+for n=1:N
+    y2(n)=reg'*conj(wts);
+    y3(n)=y1(n)-y2(n);
+    C=pp*reg;
+    KK_eq=C/(lambda+reg'*C);
+    wts=wts+KK_eq*conj(y3(n));
+    pp=(1/lambda)*pp -(1/lambda)*KK_eq*reg'*pp;
+    reg=[x(n); reg(1:3)];
+end
+
+figure
+subplot(3,1,1)
+plot(0:N-1,20*log10(abs(y3)))
+title('Learning curve of RLS algorithm (logmag of error)')
+subplot(3,1,2)
+plot(1001:1200,y3(1001:1200));
+title('200 samples of error signal after transient')
 subplot(3,1,3);
 plot(linspace(-0.5,0.5,2000)*fs,fftshift(20*log10(abs(fft(y3(1001:3000)).*ww))))
 title('Spectrum of distorted signal')

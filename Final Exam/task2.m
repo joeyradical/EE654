@@ -62,7 +62,7 @@ plot(linspace(-0.5,0.5,n_dat),fftshift(20*log10(abs(fft(n).*ww))))
 title('Output spectrum')
 
 % Task C
-f_n = 100;                    % Filter order
+f_n = 200;                    % Filter order
 f = [0 0.1 0.2 1];         % Frequency band edges
 a = [1  1  0 0];           % Desired amplitudes
 h = firpm(f_n,f,a);           % Generate filter using remez algorithm
@@ -74,3 +74,4 @@ stem(924:n_dat-1,y2(925:end),'r')
 title('Filtered time series')
 subplot(2,1,2)
 plot(linspace(-0.5,0.5,n_dat),fftshift(20*log10(abs(fft(y2).*ww))))
+title('Output spectrum of low pass filter')
